@@ -39,15 +39,14 @@ MAIN_MENU() {
   if [[ ! $SERVICE_ID_SELECTED =~ ^[0-9]+$ || $S_ID_ZERO_I -lt 0 || -z "${SERVICES_NAME_ARRAY[$S_ID_ZERO_I]}" || -z "${SERVICES_ID_ARRAY[$S_ID_ZERO_I]}" ]]
   then
     MAIN_MENU "I could not find that service. What would you like today?"
+    if [[ $ADD_APPT_RESULT ]]
+    then
+      return 0
+    fi
   else
     echo Cool!
   fi
   
-  if [[ $ADD_APPT_RESULT ]]
-  then
-    return 0
-  fi
-
   NL_ECHO "What's your phone number?"
   read CUSTOMER_PHONE
 
@@ -59,7 +58,11 @@ MAIN_MENU() {
     INSERT_CUSTOMER_RESULT=$($PSQL "INSERT INTO customers(name,phone) VALUES('$CUSTOMER_NAME', '$CUSTOMER_PHONE')")
     if [[ $INSERT_CUSTOMER_RESULT != 'INSERT 0 1' ]]
     then
-      MAIN_MENU "$(NL_ECHO "There was an error processing your info.")"
+      MAIN_MENU "There was an error processing your info."
+      if [[ $ADD_APPT_RESULT ]]
+      then
+        return 0
+      fi
     fi
   fi
   CUSTOMER_ID=$($PSQL "SELECT customer_id FROM customers WHERE phone='$CUSTOMER_PHONE'")
